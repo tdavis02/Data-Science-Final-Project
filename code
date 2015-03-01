@@ -1,0 +1,177 @@
+
+# coding: utf-8
+
+## Yelp Ratings and Useful Vote Count - Final Project
+
+### by Taylor Renee Davis
+
+# This project was influenced by research examining approach/avoidance content in American versus Japanese Amazon reviews and decision making. Approach versus avoidance content indicates the amount of positive or negative sentiment expressed in the review, for example "This book was unclear and poorly organized" would be considered avoidance content. When evaluating book reviews, there is a difference in the type of information that Americans and Japanese found helpful. Reviews rated as helpful in the United States contained a greater amount of approach content than avoidance content whereas avoidance content was viewed as especially unhelpful for book reviews among Americans but not among Japanese
+
+# The hypothesis for the current project was "does star rating predict more useful vote counts on Yelp reviews?" 
+
+# In[1]:
+
+import json 
+import numpy as np 
+import pandas as pd 
+import scipy.stats as stats
+import sklearn
+import sklearn_pandas
+from sklearn.linear_model import LinearRegression
+from sklearn.cross_validation import train_test_split
+
+#importing all necessary packages for loading data and analysis
+
+
+# In[128]:
+
+INFILENAME = 'yelp_academic_dataset_review.json'
+OUTFILENAME = 'yelp_academic_dataset_review.tsv'
+
+with open(INFILENAME) as fin: 
+    with open(OUTFILENAME, 'w') as fout:
+        header = ['funny', 'useful', 'cool', 'user_id', 'review_id','stars']
+        fout.write('\t'.join(header) + '\n')
+        for line in fin: 
+            columns = []
+            js = json.loads(line.strip())
+            funny_count = js['votes']['funny']
+            columns.append(str(funny_count))
+            useful_count = js['votes']['useful']
+            columns.append(str(useful_count))
+            cool_count = js['votes']['cool']
+            columns.append(str(cool_count))
+            user_id = js['user_id']
+            columns.append(str(user_id))
+            review_id = js['review_id']
+            columns.append(str('review_id'))
+            stars = js['stars']
+            columns.append(str(stars))
+            fout.write('\t'.join(columns) + '\n')
+
+
+# The dataset (obtained directly from Yelp through their academic dataset challenge) first needed to be converted from json to tsv. 
+
+# In[129]:
+
+yelp = pd.read_csv('yelp_academic_dataset_review.tsv', delimiter='\t')
+
+
+# In[130]:
+
+yelp.head()
+
+
+# Because only useful vote count and star rating were being analysed, the file was further reduced to include only the necessary information.
+
+# In[131]:
+
+INFILENAME = 'yelp_academic_dataset_review.json'
+OUTFILENAME = 'yelp_academic_dataset_review.tsv'
+
+with open(INFILENAME) as fin: 
+    with open(OUTFILENAME, 'w') as fout:
+        header = ['useful', 'stars']
+        fout.write('\t'.join(header) + '\n')
+        for line in fin: 
+            columns = []
+            js = json.loads(line.strip())
+            useful_count = js['votes']['useful']
+            columns.append(str(useful_count))
+            stars = js['stars']
+            columns.append(str(stars))
+            fout.write('\t'.join(columns) + '\n')
+
+
+# In[17]:
+
+df = pd.read_csv('yelp_academic_dataset_review.tsv', delimiter='\t')
+
+
+# In[18]:
+
+df.head()
+
+
+# Linear Regression and Analysis
+
+# In[16]:
+
+X, y = df.data, df.target
+
+clf = LinearRegression
+
+clf.fit(X_train, y_train)
+
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size =.2)
+
+clf.score(X, y)
+
+clf.predict(X_test)
+
+
+# In[17]:
+
+df = pd.DataFrame(np.random.randn(100, 2))
+msk = np.random.rand(len(df)) < 0.8
+train = df[msk]
+test = df[~msk]
+
+#tried a different way to split data after unable to fix errors above
+
+
+# In[18]:
+
+len(test)
+
+
+# In[19]:
+
+len(train)
+
+
+# In[20]:
+
+clf.score(test)
+
+
+# Sklearn-pandas is a bridge between Scikit-Learn's machine learning methods and pandas-style Data Frames. In particular, it provides a way to map DataFrame columns to transformations, which are later recombined into features and cross-validate a pipeline that takes a pandas DataFrame as input. 
+# 
+# This was used after trying to run Linear Regression in sklearn was leading to errors (see above)
+
+# In[3]:
+
+from sklearn_pandas import DataFrameMapper, cross_val_score
+
+
+# In[19]:
+
+data = pd.DataFrame(df)
+
+
+# In[20]:
+
+mapper = DataFrameMapper([
+        ('useful', sklearn.preprocessing.LabelBinarizer()),
+        ('stars', sklearn.preprocessing.StandardScaler())
+])
+
+
+# In[21]:
+
+np.round(mapper.fit_transform(data))
+
+
+# In[44]:
+
+pipe = sklearn.pipeline.Pipeline([
+        ('featurize', mapper),
+        ('lm', sklearn.linear_model.LinearRegression())])
+
+
+# Conclusion: still working on fixing errors and fitting regression model. This process was very difficult for me in terms of wrapping my head around how to get data in and move it around but now I have a better understanding of how to do that and build models. After fixing the errors and getting a result I am sure I will learn even more. 
+
+# In[ ]:
+
+
+
